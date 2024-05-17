@@ -1,0 +1,37 @@
+version: "3.7"
+services:
+  oauth2-proxy:
+    image: quay.io/oauth2-proxy/oauth2-proxy:v7.6.0
+    command:
+      - --http-address
+      - 0.0.0.0:4180
+    environment:
+      OAUTH2_PROXY_PROVIDER: github
+      OAUTH2_PROXY_CLIENT_ID: my-id
+      OAUTH2_PROXY_CLIENT_SECRET: my-secret
+      OAUTH2_PROXY_COOKIE_SECRET: my-cookie-secret
+      OAUTH2_PROXY_REDIRECT_URL: http://localhost/oauth2/callback
+      OAUTH2_PROXY_COOKIE_SECURE: true
+      OAUTH2_PROXY_COOKIE_HTTPONLY: true
+      OAUTH2_PROXY_EMAIL_DOMAINS: "*"
+      # Required for my corporate environment which does TLS inspection
+      OAUTH2_PROXY_SSL_INSECURE_SKIP_VERIFY: "true"
+  nginx:
+    image: nginx:1.21.6-alpine
+    depends_on:
+      - oauth2-proxy
+    volumes:
+      - "./nginx.conf:/etc/nginx/conf.d/default.conf"
+    ports:
+      - 80:80
+  atlantis:
+    image: ghcr.io/runatlantis/atlantis
+    depends_on:
+      - nginx
+    environment:
+      ATLANTIS_GH_USER: "atlantis"
+      ATLANTIS_GH_TOKEN: "example"
+      ATLANTIS_GH_WEBHOOK_SECRET: "example"
+      ATLANTIS_REPO_ALLOWLIST: "github.com/example/*"
+      ATLANTIS_URL: http://localhost
+      ATLANTIS_PORT: 4141

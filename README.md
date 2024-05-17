@@ -1,0 +1,1 @@
+This is an example docker compose stack that puts Atlantis behind a authentication proxy and restricts access to Webhooks to specific CIDR ranges.
